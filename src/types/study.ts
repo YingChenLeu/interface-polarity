@@ -1,0 +1,145 @@
+export type InterfaceMode = "light" | "dark" | "neutral";
+export type RoomCondition = "bright" | "dark";
+
+export interface Condition {
+  interfaceMode: InterfaceMode;
+  roomCondition: RoomCondition;
+  label: string;
+}
+
+export type TaskType =
+  | "button-click"
+  | "drag-drop"
+  | "list-select"
+  | "form-input"
+  | "visual-search"
+  | "choice-reaction";
+
+export interface Task {
+  id: string;
+  type: TaskType;
+  instruction: string;
+  targetValue?: string;
+}
+
+export interface TaskResult {
+  participantId: string;
+  taskId: string;
+  taskType: TaskType;
+  conditionLabel: string;
+  interfaceMode: InterfaceMode;
+  roomCondition: RoomCondition;
+
+  // Performance metrics
+  completionTimeMs: number;
+  success: boolean;
+  timestamp: string;
+
+  // Interaction metrics
+  totalClicks: number;
+  incorrectClicks: number;
+  cursorDistancePx: number;
+
+  // Fitts' Law inputs (optional per task)
+  targetDistancePx?: number | null;
+  targetWidthPx?: number | null;
+
+  // Prediction & analysis
+  predictedTimeMs?: number;
+  efficiency?: number;
+
+  // Optional task-specific context
+  targetText?: string;
+  /** Number of alternatives (for Hick's Law: log2(n)) */
+  numChoices?: number;
+}
+
+export interface ParticipantData {
+  participantId: string;
+  startTime: string;
+  endTime?: string;
+  conditionOrder: string[];
+  completed: boolean;
+}
+
+export type StudyPhase = 
+  | "consent"
+  | "instructions"
+  | "calibration"
+  | "condition-intro"
+  | "task"
+  | "condition-complete"
+  | "completion";
+
+export interface StudyState {
+  phase: StudyPhase;
+  participantId: string;
+  conditions: Condition[];
+  currentConditionIndex: number;
+  tasks: Task[];
+  currentTaskIndex: number;
+  results: TaskResult[];
+  participantData: ParticipantData;
+  calibrationData?: CalibrationData;
+}
+
+// Fitts' Law calibration types
+export interface FittsTrialData {
+  trialIndex: number;
+  targetWidth: number;
+  targetDistance: number;
+  movementTimeMs: number;
+  indexOfDifficulty: number; // log2(D/W + 1)
+  success: boolean;
+  timestamp: string;
+}
+
+// Hick's Law calibration types
+export interface HicksTrialData {
+  trialIndex: number;
+  numChoices: number;
+  targetKey: string;
+  reactionTimeMs: number;
+  correct: boolean;
+  timestamp: string;
+  rangeStartIndex: number;
+  activeKeys: string[];
+}
+
+// Exclusion stats from calibration (for display at end of calibration)
+export interface FittsExclusionStats {
+  totalTrials: number;
+  excludedFailed: number;
+  excludedTooFast: number;
+  includedTrials: number;
+}
+
+export interface HicksExclusionStats {
+  totalTrials: number;
+  excludedIncorrect: number;
+  excludedOutOfRange: number;
+  includedTrials: number;
+}
+
+// Computed law equations
+export interface FittsLawEquation {
+  a: number; // intercept
+  b: number; // slope
+  r2: number; // coefficient of determination
+  stats?: FittsExclusionStats;
+}
+
+export interface HicksLawEquation {
+  a: number; // intercept
+  b: number; // slope
+  r2: number; // coefficient of determination
+  stats?: HicksExclusionStats;
+}
+
+export interface CalibrationData {
+  fittsTrials: FittsTrialData[];
+  hicksTrials: HicksTrialData[];
+  fittsEquation?: FittsLawEquation;
+  hicksEquation?: HicksLawEquation;
+  calibrationComplete: boolean;
+}
